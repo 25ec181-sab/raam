@@ -1,1 +1,124 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <windows.h>
 
+#define WIDTH 50
+#define HEIGHT 20
+
+int birdY, score;
+int pipeX, gapY;
+int gravity = 1;
+int velocity = 0;
+int gameOver = 0;
+
+void gotoxy(int x, int y) {
+    COORD coord = {x, y};
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+void drawBorder() {
+    for (int i = 0; i < WIDTH; i++) {
+        gotoxy(i, 0);     printf("#");
+        gotoxy(i, HEIGHT); printf("#");
+    }
+    for (int i = 0; i <= HEIGHT; i++) {
+        gotoxy(0, i);     printf("#");
+        gotoxy(WIDTH - 1, i); printf("#");
+    }
+}
+
+void drawBird() {
+    gotoxy(5, birdY); printf("O");
+}
+
+void eraseBird() {
+    gotoxy(5, birdY); printf(" ");
+}
+
+void drawPipe() {
+    for (int i = 1; i < HEIGHT; i++) {
+        if (i < gapY || i > gapY + 4) {
+            gotoxy(pipeX, i); printf("|");
+        } else {
+            gotoxy(pipeX, i); printf(" ");
+        }
+    }
+}
+
+void erasePipe() {
+    for (int i = 1; i < HEIGHT; i++) {
+        gotoxy(pipeX, i); printf(" ");
+    }
+}
+
+void updatePipe() {
+    erasePipe();
+    pipeX--;
+
+    if (pipeX == 4) {
+        pipeX = WIDTH - 2;
+        gapY = rand() % (HEIGHT - 6) + 2;
+        score++;
+    }
+
+    drawPipe();
+}
+
+void updateBird() {
+    eraseBird();
+
+    velocity += gravity;
+    birdY += velocity;
+
+    if (birdY < 1) birdY = 1;
+    if (birdY >= HEIGHT) gameOver = 1;
+
+    drawBird();
+}
+
+void input() {
+    if (_kbhit()) {
+        char ch = _getch();
+        if (ch == ' ' || ch == 'w') {
+            velocity = -2;
+        }
+    }
+}
+
+void checkCollision() {
+    if (pipeX == 5) {
+        if (birdY < gapY || birdY > gapY + 4) {
+            gameOver = 1;
+        }
+    }
+}
+
+void gameLoop() {
+    birdY = HEIGHT / 2;
+    pipeX = WIDTH - 2;
+    gapY = rand() % (HEIGHT - 6) + 2;
+
+    while (!gameOver) {
+        drawBorder();
+        input();
+        updateBird();
+        updatePipe();
+        checkCollision();
+        gotoxy(0, HEIGHT + 1);
+        printf("Score: %d", score);
+        Sleep(100);
+    }
+
+    gotoxy(WIDTH / 2 - 5, HEIGHT / 2);
+    printf("Game Over!");
+    gotoxy(WIDTH / 2 - 7, HEIGHT / 2 + 1);
+    printf("Final Score: %d\n", score);
+}
+
+int main() {
+    system("cls");
+    gameLoop();
+    getch();
+    return 0;
+}
